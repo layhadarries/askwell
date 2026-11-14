@@ -1,0 +1,12 @@
+{
+  "name": "widget",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --format=iife --target=es2020 --outfile=dist/widget.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
