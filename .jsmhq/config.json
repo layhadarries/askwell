@@ -22,7 +22,7 @@
       "sandbox": {
         "resources": {
           "cpus": 4,
-          "memoryGb": 3
+          "memoryGb": 4
         },
         "allow": [],
         "deny": []
