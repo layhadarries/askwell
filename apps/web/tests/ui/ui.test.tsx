@@ -68,9 +68,9 @@ describe('design tokens', () => {
     expect(block).toContain('--fg:');
     expect(block).toContain('--glass-bg:');
     expect(block).toContain('--accent:');
-    expect(block).toContain('--radius-md:');
-    expect(block).toContain('--shadow-md:');
-    expect(block).toContain('--blur-md:');
+    expect(block).toContain('--ds-radius-md:');
+    expect(block).toContain('--ds-shadow-md:');
+    expect(block).toContain('--ds-blur-md:');
     if (name === 'dark') expect(block).toContain('color-scheme: dark');
   });
 });
