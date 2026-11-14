@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens. One set, shared by every page.
+ * Light monochrome is the default (dashboard). Add the `theme-dark` class on a
+ * layout (e.g. the landing page layout) to switch the whole subtree to dark.
+ */
+:root,
+.theme-light {
+  color-scheme: light;
+  --bg: #f4f4f5;
+  --fg: #09090b;
+  --fg-muted: #52525b;
+  --border: rgb(0 0 0 / 0.12);
+  --glass-bg: rgb(255 255 255 / 0.6);
+  --glass-border: rgb(0 0 0 / 0.1);
+  --accent: #09090b;
+  --accent-fg: #fafafa;
+  --danger: #3f3f46;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.08);
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 32px;
+}
+
+.theme-dark {
+  color-scheme: dark;
+  --bg: #050505;
+  --fg: #fafafa;
+  --fg-muted: #a1a1aa;
+  --border: rgb(255 255 255 / 0.14);
+  --glass-bg: rgb(255 255 255 / 0.06);
+  --glass-border: rgb(255 255 255 / 0.14);
+  --accent: #fafafa;
+  --accent-fg: #09090b;
+  --danger: #d4d4d8;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 8px 32px rgb(0 0 0 / 0.6);
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 32px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-glass: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --blur-sm: var(--blur-sm);
+  --blur-md: var(--blur-md);
+  --blur-lg: var(--blur-lg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
