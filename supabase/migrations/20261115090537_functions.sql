@@ -215,6 +215,13 @@ $$;
 -- small project's chunks could fall outside the first candidates. Iterative
 -- scan (pgvector 0.8+) keeps scanning until enough rows pass the filter.
 
+-- Load the pgvector library before the CREATE below. Until it is loaded in
+-- this session, Postgres treats hnsw.iterative_scan as an unknown placeholder,
+-- and only a superuser may put one in a function's SET clause (42501 on
+-- Supabase). Parsing a vector value loads the library and registers the
+-- setting as a normal user setting.
+select '[0]'::extensions.vector;
+
 create function public.match_chunks(
   p_project_id uuid,
   p_query_embedding extensions.vector(1536),
