@@ -1,9 +1,23 @@
-import { APP_NAME } from '@askwell/shared';
+import {
+  DemoPlaceholder,
+  Footer,
+  Hero,
+  HowItWorks,
+  InstallSnippet,
+  Pricing,
+} from '../components/landing';
 
 export default function Home() {
   return (
-    <main>
-      <h1>{APP_NAME}</h1>
-    </main>
+    <div className="theme-dark min-h-dvh overflow-x-clip">
+      <main>
+        <Hero />
+        <HowItWorks />
+        <DemoPlaceholder />
+        <Pricing />
+        <InstallSnippet />
+      </main>
+      <Footer />
+    </div>
   );
 }
