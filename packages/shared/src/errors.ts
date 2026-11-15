@@ -26,20 +26,20 @@ export const apiErrorSchema = z.object({
 });
 export type ApiError = z.infer<typeof apiErrorSchema>;
 
-/** Default HTTP status for each error code. */
+/** Default HTTP status for each error code, in `ERROR_CODES` order. */
 export const ERROR_STATUS = {
   invalid_input: 400,
   unauthorized: 401,
-  plan_required: 402,
   forbidden: 403,
   not_found: 404,
-  conflict: 409,
-  file_too_large: 413,
-  unsupported_file_type: 415,
-  message_blocked: 422,
+  plan_required: 402,
   limit_reached: 403,
   quota_exceeded: 429,
   rate_limited: 429,
+  message_blocked: 422,
+  file_too_large: 413,
+  unsupported_file_type: 415,
+  conflict: 409,
   internal_error: 500,
 } as const satisfies Record<ErrorCode, number>;
 
