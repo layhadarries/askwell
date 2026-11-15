@@ -36,10 +36,12 @@ export function CreateProjectForm({ onCreated }: { onCreated: (project: Project)
           id="new-project-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          // Locked while creating, so a later edit can't be cleared on success.
+          disabled={busy}
           maxLength={MAX_PROJECT_NAME_LENGTH}
           placeholder="Project name, e.g. My store"
           autoComplete="off"
-          className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-glass px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-glass px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
         />
         <Button type="submit" disabled={busy || !cleanProjectName(name)}>
           {busy ? 'Creating…' : 'Create project'}
