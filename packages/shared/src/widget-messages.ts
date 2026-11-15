@@ -59,15 +59,26 @@ type Payload<T extends WidgetMessageType> = Omit<
   'source' | 'version' | 'type'
 >;
 
+/**
+ * Argument tuple per type. Distributes over T, so a union type such as
+ * 'resize' | 'unread' still has to come with the matching payload.
+ */
+type WidgetMessageArgs<T extends WidgetMessageType> = T extends WidgetMessageType
+  ? keyof Payload<T> extends never
+    ? [type: T]
+    : [type: T, payload: Payload<T>]
+  : never;
+
 /** Builds a message with the envelope filled in, e.g. widgetMessage('resize', { height: 480 }). */
 export function widgetMessage<T extends WidgetMessageType>(
-  type: T,
-  ...payload: keyof Payload<T> extends never ? [] : [Payload<T>]
+  ...args: WidgetMessageArgs<T>
 ): Extract<WidgetMessage, { type: T }> {
+  const [type, payload]: [WidgetMessageType, object?] = args;
+  // Envelope last, so a payload carrying extra fields can't overwrite it.
   return {
+    ...payload,
     source: WIDGET_MESSAGE_SOURCE,
     version: WIDGET_MESSAGE_VERSION,
     type,
-    ...(payload[0] ?? {}),
   } as Extract<WidgetMessage, { type: T }>;
 }

@@ -73,8 +73,20 @@ describe('widget messages', () => {
       widgetMessage('close', { height: 1 });
       // @ts-expect-error unknown type
       widgetMessage('navigate');
+      const build = (type: 'resize' | 'unread') =>
+        // @ts-expect-error a union of payload types still needs a payload
+        widgetMessage(type);
+      // Narrowed unions still build.
+      const either = (type: 'ready' | 'close') => widgetMessage(type);
+      return [build, either];
     };
     expect(typeof typeChecks).toBe('function');
+  });
+
+  it('keeps the envelope when a payload variable carries envelope fields', () => {
+    const payload = { height: 300, version: 2, source: 'other-widget', type: 'close' };
+    const message = widgetMessage('resize', payload);
+    expect(message).toMatchObject({ ...env, type: 'resize', height: 300 });
   });
 
   it('survives structured clone, as postMessage does', () => {
