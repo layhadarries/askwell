@@ -40,8 +40,8 @@ const eq = vi.fn((_col: string, value: string) => ({
     return { data: row ?? null, error: null };
   },
 }));
-const select = vi.fn((_columns: string) => ({ eq }));
-const from = vi.fn((_table: string) => ({ select }));
+const select = vi.fn<(columns: string) => { eq: typeof eq }>(() => ({ eq }));
+const from = vi.fn<(table: string) => { select: typeof select }>(() => ({ select }));
 
 vi.mock('server-only', () => ({}));
 vi.mock('../../lib/supabase/service', () => ({ createServiceClient: () => ({ from }) }));
