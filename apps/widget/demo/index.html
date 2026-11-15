@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Widget demo host page</title>
+  <style>
+    /* Hostile host styles: none of these may change the widget. */
+    * { font-family: "Comic Sans MS", cursive !important; }
+    button { background: red !important; color: yellow !important; border: 4px dashed lime !important; }
+    div { outline: 2px dotted magenta; }
+    iframe { display: none !important; }
+    body { margin: 0; padding: 24px; font-size: 18px; background: #f6f6f6; }
+    code { background: #fff; padding: 2px 4px; }
+  </style>
+</head>
+<body>
+  <h1>Demo host page</h1>
+  <p>Serve this file from any origin, e.g. <code>python3 -m http.server 8000</code> in <code>apps/widget/demo</code>, then open:</p>
+  <p><code>http://localhost:8000/?origin=https://&lt;app-origin&gt;&amp;key=pk_...</code></p>
+  <p>The page's own styles are deliberately hostile (red buttons, hidden iframes). The widget must look normal.</p>
+  <button type="button">A host page button</button>
+  <p id="status"></p>
+
+  <script>
+    // Loads <origin>/widget.js with data-key, like a customer's install snippet.
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var origin = params.get('origin') || 'http://localhost:3000';
+      var key = params.get('key') || '';
+      var status = document.getElementById('status');
+      status.textContent = 'Loading ' + origin + '/widget.js with key ' + (key || '(none)');
+      var s = document.createElement('script');
+      s.src = origin.replace(/\/+$/, '') + '/widget.js';
+      s.async = true;
+      s.setAttribute('data-key', key);
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>
