@@ -1,6 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { PGlite, Transaction } from '@electric-sql/pglite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { asOwner, asRole, createSupabasePglite } from '../supabase-pglite';
+import { asOwner, asRole, createSupabasePglite, MIGRATIONS_DIR } from '../supabase-pglite';
+
+const FUNCTIONS_MIGRATION = '20261115090537_functions.sql';
 
 const SERVICE_FUNCTIONS = [
   `public.create_project('user_x', 'P', 'pk_x', 1)`,
@@ -87,6 +91,35 @@ describe('function definitions', () => {
       expect(row.prosecdef, row.proname).toBe(false);
       expect(row.proconfig, row.proname).toContain('search_path=""');
     }
+  });
+});
+
+describe('match_chunks iterative scan', () => {
+  // On real Supabase the migration runs as a non-superuser, and pgvector's
+  // library may not be loaded yet. Then hnsw.iterative_scan is an unknown
+  // placeholder and `set hnsw.iterative_scan` on CREATE FUNCTION fails with
+  // 42501. pglite runs as superuser with the library loaded, so it can't
+  // reproduce that. Guard the load line in the file instead.
+  it('loads pgvector before the CREATE that sets hnsw.iterative_scan', async () => {
+    const sql = await readFile(join(MIGRATIONS_DIR, FUNCTIONS_MIGRATION), 'utf8');
+    const code = sql.replace(/--.*$/gm, '');
+    const load = code.search(/^select '\[0\]'::extensions\.vector;$/m);
+    const create = code.indexOf('create function public.match_chunks(');
+    const setting = code.indexOf("set hnsw.iterative_scan = 'strict_order'");
+    expect(load, 'load line').toBeGreaterThan(-1);
+    expect(create).toBeGreaterThan(load);
+    expect(setting).toBeGreaterThan(create);
+    // The load must come before every CREATE that sets an hnsw.* parameter.
+    const firstHnswSet = code.search(/^set hnsw\./m);
+    expect(firstHnswSet).toBeGreaterThan(load);
+  });
+
+  it('keeps hnsw.iterative_scan = strict_order on match_chunks', async () => {
+    const { rows } = await db.query<{ proconfig: string[] }>(
+      `select p.proconfig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname = 'match_chunks'`,
+    );
+    expect(rows[0]?.proconfig).toContain('hnsw.iterative_scan=strict_order');
   });
 });
 
