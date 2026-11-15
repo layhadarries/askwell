@@ -55,5 +55,8 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes, so `auth()` has the session there.
     '/(api|trpc)(.*)',
+    // Clerk's Frontend API proxy (auto-enabled on production keys served from
+    // hosts like *.vercel.app). The `.js` exclusion above would skip its scripts.
+    '/__clerk/(.*)',
   ],
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyRoute } from '../../proxy';
+import { classifyRoute, config } from '../../proxy';
 
 describe('classifyRoute', () => {
   it.each([
@@ -37,6 +37,8 @@ describe('classifyRoute', () => {
     '/api/widget/chat',
     '/api/clerk/webhook',
     '/api/posthog-config',
+    '/__clerk/v1/client',
+    '/__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js',
     // Share the text of a protected prefix but are not under it.
     '/dashboardx',
     '/api/projectsx',
@@ -44,5 +46,11 @@ describe('classifyRoute', () => {
     '/api/conversationsx',
   ])('leaves %s public', (path) => {
     expect(classifyRoute(path)).toBe('public');
+  });
+});
+
+describe('proxy matcher', () => {
+  it("runs on Clerk's /__clerk proxy paths, including scripts", () => {
+    expect(config.matcher).toContain('/__clerk/(.*)');
   });
 });
