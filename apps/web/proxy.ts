@@ -1,5 +1,5 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { type NextFetchEvent, type NextRequest, NextResponse } from 'next/server';
 
 /**
  * Path prefixes that need a signed-in owner. Each one matches itself and
@@ -8,6 +8,15 @@ import { NextResponse } from 'next/server';
  */
 const PROTECTED_PAGE_PREFIXES = ['/dashboard'] as const;
 const PROTECTED_API_PREFIXES = ['/api/projects', '/api/knowledge', '/api/conversations'] as const;
+
+/**
+ * Path prefixes Clerk never runs on. The widget panel (/embed) lives in a
+ * cross-origin iframe and its API is called from customer sites: neither ever
+ * needs auth. On a dev Clerk instance, clerkMiddleware would send a visitor
+ * with no Clerk cookie through a handshake redirect, which can fail or loop in
+ * a third-party iframe with cookies blocked.
+ */
+const CLERK_FREE_PREFIXES = ['/embed', '/api/widget'] as const;
 
 function underPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -29,11 +38,16 @@ export function classifyRoute(pathname: string): RouteKind {
   return 'public';
 }
 
+/** True when Clerk must not run for this path at all. */
+export function skipsClerk(pathname: string): boolean {
+  return CLERK_FREE_PREFIXES.some((p) => underPrefix(pathname, p));
+}
+
 // Same URLs as ClerkProvider in app/layout.tsx. The server needs them too, or
 // redirectToSignIn sends visitors to Clerk's hosted sign-in page.
 const AUTH_URLS = { signInUrl: '/sign-in', signUpUrl: '/sign-up' };
 
-export default clerkMiddleware(async (auth, req) => {
+const withClerk = clerkMiddleware(async (auth, req) => {
   const kind = classifyRoute(req.nextUrl.pathname);
   if (kind === 'public') return;
 
@@ -48,6 +62,12 @@ export default clerkMiddleware(async (auth, req) => {
   }
   return redirectToSignIn({ returnBackUrl: req.url });
 }, AUTH_URLS);
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Short-circuit before Clerk: no handshake, no auth headers, no cookies.
+  if (skipsClerk(req.nextUrl.pathname)) return NextResponse.next();
+  return withClerk(req, event);
+}
 
 export const config = {
   matcher: [
