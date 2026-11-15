@@ -32,8 +32,9 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+// hasOwnProperty.call, not the ES2022 own-key helper: the bundle targets es2020.
 const hasOnlyKeys = (o: Obj, keys: readonly string[]) =>
-  Object.keys(o).length === keys.length && keys.every((k) => Object.hasOwn(o, k));
+  Object.keys(o).length === keys.length && keys.every((k) => Object.prototype.hasOwnProperty.call(o, k));
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 
