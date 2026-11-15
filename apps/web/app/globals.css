@@ -31,6 +31,9 @@
   --ds-blur-lg: 32px;
 }
 
+/* The page scrollbar belongs to <html>, so a page with a `theme-dark` layout
+ * gives the root the dark tokens too (dark color-scheme and scrollbar). */
+html:has(.theme-dark),
 .theme-dark {
   color-scheme: dark;
   --bg: #050505;
@@ -79,4 +82,12 @@ body,
 .theme-dark {
   background: var(--bg);
   color: var(--fg);
+}
+
+/* Dark scrollbars use the theme tokens. scrollbar-color inherits as a computed
+ * color, so it's declared on each dark boundary, not only on the root.
+ * Light pages keep the browser's default light scrollbar. */
+html:has(.theme-dark),
+.theme-dark {
+  scrollbar-color: var(--fg-muted) var(--bg);
 }
