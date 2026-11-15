@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { APP_NAME } from './app';
 import {
   getPlanLimits,
   type Plan,
@@ -55,6 +56,9 @@ export const widgetChatResponseSchema = z.object({
   reply: z.string(),
 });
 export type WidgetChatResponse = z.infer<typeof widgetChatResponseSchema>;
+
+/** The fixed reply the chat route sends in Phase 2, before real answers exist. */
+export const MOCK_REPLY = `Thanks for your message! ${APP_NAME} is still being set up here, so real answers will arrive soon.`;
 
 /** Config fields in `patch` that `plan` may not change. Empty = allowed. */
 export function disallowedConfigFields(
