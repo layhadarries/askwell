@@ -23,6 +23,8 @@ const db = {
   projects: [] as Row[],
 };
 let signedInAs: string | null = null;
+/** Set to make the next accounts reads fail, as a database error. */
+let failAccounts: { code: string; message: string } | null = null;
 
 function ownerQuery(table: 'accounts' | 'projects') {
   const visible = () =>
@@ -32,6 +34,7 @@ function ownerQuery(table: 'accounts' | 'projects') {
   let id: string | undefined;
   const run = (): Result => {
     if (table === 'accounts') {
+      if (failAccounts) return { data: null, error: failAccounts };
       const plan = signedInAs ? db.accounts.get(signedInAs) : undefined;
       return { data: plan ? [{ plan }] : [], error: null };
     }
@@ -48,7 +51,7 @@ function ownerQuery(table: 'accounts' | 'projects') {
     eq: (_col: 'id', value: string) => ((id = value), builder),
     maybeSingle: async () => {
       const { data, error } = run();
-      return { data: (data as unknown[])[0] ?? null, error };
+      return { data: (data as unknown[] | null)?.[0] ?? null, error };
     },
     then: (resolve: (r: Result) => unknown) => resolve(run()),
   };
@@ -142,6 +145,8 @@ beforeEach(() => {
   db.accounts.clear();
   db.projects = [];
   signedInAs = null;
+  failAccounts = null;
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -304,6 +309,53 @@ describe('DELETE /api/projects/:id', () => {
   it('a non-UUID id → 400', async () => {
     signedInAs = ALICE;
     await expectError(await del('abc'), 400, 'invalid_input');
+  });
+});
+
+describe('database failures → 500 internal_error with the error shape', () => {
+  const DB_DOWN = { code: 'XX000', message: 'connection reset: secret detail' };
+
+  async function expectInternal(res: Response) {
+    expect(res.status).toBe(500);
+    const body = apiErrorSchema.parse(await res.json());
+    expect(body.error.code).toBe('internal_error');
+    expect(body.error.message).not.toContain('secret detail');
+  }
+
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('GET when the plan read fails', async () => {
+    signedInAs = ALICE;
+    failAccounts = DB_DOWN;
+    await expectInternal(await projectsRoute.GET());
+  });
+
+  it('POST when ensureAccount fails', async () => {
+    signedInAs = ALICE;
+    ensureAccount.mockRejectedValueOnce(new Error('ensureAccount failed: upsert'));
+    await expectInternal(await post({ name: 'Site' }));
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('POST when the plan read fails', async () => {
+    signedInAs = ALICE;
+    failAccounts = DB_DOWN;
+    await expectInternal(await post({ name: 'Site' }));
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('POST when create_project fails for another reason', async () => {
+    signedInAs = ALICE;
+    rpc.mockResolvedValueOnce({ data: null, error: DB_DOWN });
+    await expectInternal(await post({ name: 'Site' }));
+  });
+
+  it('PATCH when the plan read fails after the rename', async () => {
+    const project = await createAs(ALICE);
+    failAccounts = DB_DOWN;
+    await expectInternal(await patch(project.id, { name: 'New' }));
   });
 });
 

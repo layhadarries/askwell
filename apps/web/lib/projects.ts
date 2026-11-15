@@ -41,6 +41,15 @@ export function errorResponse(code: ErrorCode, message: string): NextResponse {
 }
 
 /**
+ * 500 `internal_error` for a failed database call. Logs the cause on the server
+ * only; the client gets a generic message, never the database's.
+ */
+export function internalError(route: string, message: string, cause: unknown): NextResponse {
+  console.error(`${route} failed`, cause);
+  return errorResponse('internal_error', message);
+}
+
+/**
  * Signed-in owner's Clerk user ID, from the server session only.
  *
  * Calls `auth.protect()` first, as every owner handler must. In a route handler

@@ -10,6 +10,7 @@ import {
   errorResponse,
   generatePublicKey,
   getOwnerPlan,
+  internalError,
   isRaised,
   parseJsonBody,
   requireOwnerId,
@@ -23,15 +24,19 @@ export async function GET() {
   const ownerId = await requireOwnerId();
   if (ownerId instanceof NextResponse) return ownerId;
 
-  const client = createOwnerClient();
-  const [plan, { data, error }] = await Promise.all([
-    getOwnerPlan(client),
-    client.from('projects').select('*').order('created_at', { ascending: true }),
-  ]);
-  if (error) return errorResponse('internal_error', 'Could not load projects');
+  try {
+    const client = createOwnerClient();
+    const [plan, { data, error }] = await Promise.all([
+      getOwnerPlan(client),
+      client.from('projects').select('*').order('created_at', { ascending: true }),
+    ]);
+    if (error) throw error;
 
-  const body: ListProjectsResponse = { plan, projects: data.map((row) => toProject(row, plan)) };
-  return NextResponse.json(body);
+    const body: ListProjectsResponse = { plan, projects: data.map((row) => toProject(row, plan)) };
+    return NextResponse.json(body);
+  } catch (err) {
+    return internalError('GET /api/projects', 'Could not load projects', err);
+  }
 }
 
 /**
@@ -45,24 +50,29 @@ export async function POST(request: Request) {
   const input = await parseJsonBody(request, createProjectRequestSchema);
   if (!input) return errorResponse('invalid_input', 'Send a project name (1–80 characters)');
 
-  await ensureAccount(ownerId);
-  const plan = await getOwnerPlan(createOwnerClient());
+  try {
+    await ensureAccount(ownerId);
+    const plan = await getOwnerPlan(createOwnerClient());
+    const limit = PLAN_LIMITS[plan].projects;
 
-  // Service client: owners can't insert projects. Owner ID is from the session.
-  const { data, error } = await createServiceClient().rpc('create_project', {
-    p_owner_id: ownerId,
-    p_name: input.name,
-    p_public_key: generatePublicKey(),
-    p_max_projects: PLAN_LIMITS[plan].projects,
-  });
-  if (isRaised(error, 'limit_reached')) {
-    return errorResponse(
-      'limit_reached',
-      `Your ${plan === 'pro' ? 'Pro' : 'Free'} plan allows ${PLAN_LIMITS[plan].projects} project${PLAN_LIMITS[plan].projects === 1 ? '' : 's'}`,
-    );
+    // Service client: owners can't insert projects. Owner ID is from the session.
+    const { data, error } = await createServiceClient().rpc('create_project', {
+      p_owner_id: ownerId,
+      p_name: input.name,
+      p_public_key: generatePublicKey(),
+      p_max_projects: limit,
+    });
+    if (isRaised(error, 'limit_reached')) {
+      return errorResponse(
+        'limit_reached',
+        `Your ${plan === 'pro' ? 'Pro' : 'Free'} plan allows ${limit} project${limit === 1 ? '' : 's'}`,
+      );
+    }
+    if (error || !data) throw error ?? new Error('create_project returned no row');
+
+    const body: CreateProjectResponse = { project: toProject(data, plan) };
+    return NextResponse.json(body, { status: 201 });
+  } catch (err) {
+    return internalError('POST /api/projects', 'Could not create the project', err);
   }
-  if (error || !data) return errorResponse('internal_error', 'Could not create the project');
-
-  const body: CreateProjectResponse = { project: toProject(data, plan) };
-  return NextResponse.json(body, { status: 201 });
 }
