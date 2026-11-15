@@ -162,13 +162,6 @@ describe('panel', () => {
     expect(m.root.querySelectorAll('iframe')).toHaveLength(1);
   });
 
-  it('has a fallback close button', async () => {
-    const { m } = await mounted();
-    m.open();
-    (m.root.querySelector('button.close') as HTMLButtonElement).click();
-    expect((m.root.querySelector('.panel') as HTMLElement).hidden).toBe(true);
-  });
-
   it('goes full screen below 480px (CSS)', async () => {
     const { m } = await mounted();
     const css = m.root.querySelector('style')?.textContent ?? '';
@@ -286,5 +279,25 @@ describe('isolation and timing', () => {
     const { postMessage: post } = openWithFrame(m);
     iframeOf(m).dispatchEvent(new win.Event('load'));
     expect(post).toHaveBeenCalledWith(msg('ready'), BASE);
+  });
+});
+
+describe('review fixes', () => {
+  it('a failed config fetch clears the guard so a later load can retry', async () => {
+    const { win, doc, script } = setup();
+    const failing = vi.fn(async () => { throw new TypeError('offline'); }) as unknown as typeof fetch;
+    expect(await boot(script as unknown as HTMLScriptElement, { win, fetch: failing })).toBeNull();
+    expect(GUARD in win).toBe(false);
+    const m = await boot(script as unknown as HTMLScriptElement, { win, fetch: fetchReturning(config) });
+    expect(m).not.toBeNull();
+    expect(doc.querySelectorAll('[data-askwell]')).toHaveLength(1);
+  });
+
+  it('opening moves focus into the panel; closing returns it to the button', async () => {
+    const { m } = await mounted();
+    m.open();
+    expect(m.root.activeElement).toBe(iframeOf(m));
+    m.close();
+    expect(m.root.activeElement).toBe(m.root.querySelector('button.button'));
   });
 });

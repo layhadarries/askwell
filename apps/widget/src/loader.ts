@@ -36,15 +36,21 @@ export async function boot(
     if (!isPublicKey(key)) return null;
     const base = new URL(script.src, win.location.href).origin;
     flags[GUARD] = true;
-
-    const res = await deps.fetch(`${base}/api/widget/config?key=${encodeURIComponent(key)}`, {
-      credentials: 'omit',
-    });
-    if (!res.ok) return null;
-    const config = parseConfig(await res.json());
-    if (!config) return null;
-    await bodyReady(win.document);
-    return mount(win, base, key, config);
+    try {
+      const res = await deps.fetch(`${base}/api/widget/config?key=${encodeURIComponent(key)}`, {
+        credentials: 'omit',
+      });
+      const config = res.ok ? parseConfig(await res.json()) : null;
+      if (config) {
+        await bodyReady(win.document);
+        return mount(win, base, key, config);
+      }
+    } catch {
+      // Fall through: nothing mounted.
+    }
+    // Nothing mounted: let a later insertion of the script try again.
+    delete flags[GUARD];
+    return null;
   } catch {
     return null;
   }
@@ -90,8 +96,6 @@ function mount(win: Window, base: string, key: string, config: WidgetConfig): Mo
 
   const panel = el(doc, 'div', { class: `panel ${config.animation}`, role: 'dialog', 'aria-label': config.headerText });
   panel.hidden = true;
-  const closeBtn = el(doc, 'button', { type: 'button', class: 'close', 'aria-label': 'Close chat' });
-  closeBtn.textContent = '×';
   let iframe: HTMLIFrameElement | null = null;
 
   const setUnread = (count: number) => {
@@ -115,6 +119,8 @@ function mount(win: Window, base: string, key: string, config: WidgetConfig): Mo
     panel.hidden = false;
     button.setAttribute('aria-expanded', 'true');
     setUnread(0);
+    // Dialog: move focus inside. close() hands it back to the launcher.
+    iframe.focus();
     // Next frame: drop the start state so the configured animation runs.
     win.requestAnimationFrame(() => win.requestAnimationFrame(() => panel.classList.remove('enter')));
   }
@@ -126,7 +132,6 @@ function mount(win: Window, base: string, key: string, config: WidgetConfig): Mo
   }
 
   button.addEventListener('click', () => (panel.hidden ? open() : close()));
-  closeBtn.addEventListener('click', close);
 
   win.addEventListener('message', (event: MessageEvent) => {
     const frameWin = iframe?.contentWindow;
@@ -150,7 +155,6 @@ function mount(win: Window, base: string, key: string, config: WidgetConfig): Mo
     }
   });
 
-  panel.append(closeBtn);
   wrap.append(panel, button);
   root.append(style, wrap);
   doc.body.append(host);
