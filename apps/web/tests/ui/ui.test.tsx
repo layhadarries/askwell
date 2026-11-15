@@ -23,6 +23,11 @@ describe('Button', () => {
     expect(html).toContain('bg-accent');
     expect(html).toContain('Go');
   });
+  it('has a 44px minimum touch target in both directions', () => {
+    const html = renderToStaticMarkup(<Button>x</Button>);
+    expect(html).toContain('min-h-11');
+    expect(html).toContain('min-w-11');
+  });
   it('renders the secondary variant and passes props through', () => {
     const html = renderToStaticMarkup(
       <Button variant="secondary" disabled type="submit">
@@ -72,6 +77,14 @@ describe('design tokens', () => {
     expect(block).toContain('--ds-shadow-md:');
     expect(block).toContain('--ds-blur-md:');
     if (name === 'dark') expect(block).toContain('color-scheme: dark');
+  });
+});
+
+describe('theme boundaries', () => {
+  it('body and each theme class paint their own background and text color', () => {
+    const rule = /body,\s*\.theme-light,\s*\.theme-dark\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(rule).toContain('background: var(--bg)');
+    expect(rule).toContain('color: var(--fg)');
   });
 });
 

@@ -72,7 +72,11 @@
   --blur-lg: var(--ds-blur-lg);
 }
 
-body {
+/* Each theme boundary paints its own colors, so a nested `theme-dark` layout
+ * doesn't inherit the body's already-computed light color. */
+body,
+.theme-light,
+.theme-dark {
   background: var(--bg);
   color: var(--fg);
 }
