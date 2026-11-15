@@ -183,14 +183,16 @@ create policy "Owners read their projects"
   on public.projects for select to authenticated
   using (id in (select private.owned_project_ids()));
 
+-- Write policies check the row's own owner_id, not the helper: if a row is
+-- re-checked after a concurrent change, the current owner is what counts.
 create policy "Owners rename their projects"
   on public.projects for update to authenticated
-  using (id in (select private.owned_project_ids()))
+  using (owner_id = (select auth.jwt() ->> 'sub'))
   with check (owner_id = (select auth.jwt() ->> 'sub'));
 
 create policy "Owners delete their projects"
   on public.projects for delete to authenticated
-  using (id in (select private.owned_project_ids()));
+  using (owner_id = (select auth.jwt() ->> 'sub'));
 
 create policy "Owners read their widget configs"
   on public.widget_configs for select to authenticated
