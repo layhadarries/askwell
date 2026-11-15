@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "widget": "pnpm --filter widget build && mkdir -p public && cp ../widget/dist/widget.js public/widget.js",
+    "widget": "pnpm --filter widget build && node -e \"const fs=require('fs');fs.mkdirSync('public',{recursive:true});fs.copyFileSync('../widget/dist/widget.js','public/widget.js')\"",
     "predev": "pnpm widget",
     "dev": "next dev",
     "prebuild": "pnpm widget",
