@@ -6,12 +6,12 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "pnpm build:widget && pnpm --filter web dev",
+    "dev": "pnpm --filter widget build && pnpm --filter web dev",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "build": "pnpm build:widget && pnpm --filter web build",
-    "build:widget": "pnpm --filter widget build && node -e \"const f=require('fs');f.mkdirSync('apps/web/public',{recursive:true});f.copyFileSync('apps/widget/dist/widget.js','apps/web/public/widget.js')\""
+    "build": "pnpm --filter web build",
+    "build:widget": "pnpm --filter widget build"
   },
   "devDependencies": {
     "eslint": "^9.39.5",

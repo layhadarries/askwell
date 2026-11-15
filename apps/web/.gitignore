@@ -1,2 +1,2 @@
-# Built from apps/widget by the root build (pnpm build:widget)
+# Built from apps/widget by the web prebuild script
 /public/widget.js
