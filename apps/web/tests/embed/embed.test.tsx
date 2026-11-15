@@ -227,6 +227,20 @@ describe('parent messages', () => {
     ]);
   });
 
+  it('re-sends the last resize once the handshake completes', () => {
+    const { win, parent, posts, dispatch } = fakeWindow();
+    const c = createParentChannel(win, '');
+    c.start();
+    c.resize(300);
+    c.resize(420);
+    expect(posts).toHaveLength(0);
+    dispatch({ source: parent as unknown as Window, origin: 'https://shop.example', data: { source: 'askwell', version: 1, type: 'ready' } });
+    expect(posts.map(([m]) => parseWidgetMessage(m))).toEqual([
+      { source: 'askwell', version: 1, type: 'ready' },
+      { source: 'askwell', version: 1, type: 'resize', height: 420 },
+    ]);
+  });
+
   it('does not post when not inside a frame', () => {
     const posts: unknown[] = [];
     const win: { parent: unknown; addEventListener: () => void; removeEventListener: () => void; postMessage: (m: unknown) => void } = {

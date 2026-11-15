@@ -7,15 +7,8 @@ import { MessageList } from './MessageList';
 import { createParentChannel, type ParentChannel } from './parent';
 import { getVisitorId } from './visitor';
 
-export function ChatPanel({
-  config,
-  initialState,
-}: {
-  config: WidgetConfig;
-  /** For tests and previews. */
-  initialState?: ChatState;
-}) {
-  const [state, setState] = useState<ChatState>(initialState ?? { messages: [], typing: false });
+export function ChatPanel({ config }: { config: WidgetConfig }) {
+  const [state, setState] = useState<ChatState>({ messages: [], typing: false });
   const [draft, setDraft] = useState('');
   const chat = useMemo(() => createChat(setState), []);
   const channel = useRef<ParentChannel | null>(null);

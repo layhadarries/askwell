@@ -33,6 +33,8 @@ export function createParentChannel(win: WindowLike, referrer: string) {
   const framed = !!parent && parent !== (win as unknown);
   let targetOrigin = originOf(referrer);
   let readySent = false;
+  /** Last height asked for, re-sent once the handshake completes. */
+  let lastHeight: number | null = null;
 
   function post(message: WidgetMessage): boolean {
     if (!framed || !targetOrigin) return false;
@@ -41,7 +43,9 @@ export function createParentChannel(win: WindowLike, referrer: string) {
   }
 
   function sendReady() {
-    if (!readySent) readySent = post(widgetMessage('ready'));
+    if (readySent) return;
+    readySent = post(widgetMessage('ready'));
+    if (readySent && lastHeight !== null) post(widgetMessage('resize', { height: lastHeight }));
   }
 
   function onMessage(event: MessageEvent) {
@@ -62,7 +66,10 @@ export function createParentChannel(win: WindowLike, referrer: string) {
       win.removeEventListener('message', onMessage);
     },
     close: () => post(widgetMessage('close')),
-    resize: (height: number) => post(widgetMessage('resize', { height })),
+    resize: (height: number) => {
+      lastHeight = height;
+      return post(widgetMessage('resize', { height }));
+    },
     /** For tests. */
     get targetOrigin() {
       return targetOrigin;
