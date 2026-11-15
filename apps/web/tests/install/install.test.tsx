@@ -54,6 +54,12 @@ describe('appOrigin', () => {
   it('ignores a malformed host and uses NEXT_PUBLIC_APP_URL', () => {
     expect(appOrigin(hdrs({ host: 'evil.com/"><x' }), 'https://askwell.app/')).toBe('https://askwell.app');
   });
+  it('falls back to NEXT_PUBLIC_APP_URL when the host has an invalid port', () => {
+    expect(appOrigin(hdrs({ 'x-forwarded-host': 'app.example.com:70000' }), 'https://askwell.app')).toBe(
+      'https://askwell.app',
+    );
+    expect(appOrigin(hdrs({ host: 'app.example.com:70000' }))).toBeNull();
+  });
   it('is null with no usable host or fallback', () => {
     expect(appOrigin(hdrs({}))).toBeNull();
     expect(appOrigin(hdrs({}), 'ftp://x')).toBeNull();

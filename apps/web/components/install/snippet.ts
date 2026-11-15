@@ -32,7 +32,9 @@ export function appOrigin(headers: HeadersLike, fallbackUrl?: string): string | 
     const forwarded = firstValue(headers.get('x-forwarded-proto'))?.toLowerCase();
     const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
     const proto = forwarded === 'http' || forwarded === 'https' ? forwarded : local ? 'http' : 'https';
-    return `${proto}://${host.toLowerCase()}`;
+    // The regex can't catch everything (e.g. port 70000), so the URL parser has the last word.
+    const fromRequest = originOf(`${proto}://${host.toLowerCase()}`);
+    if (fromRequest) return fromRequest;
   }
   return originOf(fallbackUrl);
 }
