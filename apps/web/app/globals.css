@@ -4,6 +4,10 @@
  * Design tokens. One set, shared by every page.
  * Light monochrome is the default (dashboard). Add the `theme-dark` class on a
  * layout (e.g. the landing page layout) to switch the whole subtree to dark.
+ *
+ * Radius, shadow and blur use a `--ds-` prefix so `@theme inline` below can map
+ * Tailwind's `--radius-*`, `--shadow-*` and `--blur-*` to them without a
+ * variable referencing itself.
  */
 :root,
 .theme-light {
