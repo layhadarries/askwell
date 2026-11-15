@@ -21,10 +21,6 @@ export const STYLES = `
   transition: opacity 200ms ease, transform 200ms ease; }
 .panel[hidden] { display: none; }
 .panel iframe { display: block; width: 100%; height: 100%; border: 0; }
-.close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0;
-  border-radius: 8px; background: transparent; color: #52525b; font: 20px/1 system-ui, sans-serif;
-  cursor: pointer; opacity: 0; }
-.close:focus-visible { opacity: 1; outline: 2px solid #09090b; }
 .panel.fade.enter { opacity: 0; }
 .panel.slide.enter { opacity: 0; transform: translateY(16px); }
 .panel.scale.enter { opacity: 0; transform: scale(0.92); }
@@ -36,6 +32,5 @@ export const STYLES = `
 @media (max-width: 479.98px) {
   .panel { position: fixed; inset: 0; width: 100vw; height: 100vh !important; height: 100dvh !important;
     max-height: none; border-radius: 0; }
-  .close { opacity: 1; }
 }
 `;
