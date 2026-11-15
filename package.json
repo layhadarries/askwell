@@ -6,7 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "pnpm --filter widget build && pnpm --filter web dev",
+    "dev": "pnpm --filter web dev",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
