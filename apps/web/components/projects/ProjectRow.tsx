@@ -57,10 +57,12 @@ export function ProjectRowView({
             onKeyDown={(e) => {
               if (e.key === 'Escape') onCancel();
             }}
+            // Locked while saving, so the name saved is the name shown.
+            disabled={busy}
             maxLength={MAX_PROJECT_NAME_LENGTH}
             autoFocus
             autoComplete="off"
-            className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-glass px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-glass px-3 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
           />
           <div className="flex gap-2">
             <Button type="submit" disabled={busy || !cleanProjectName(draft)}>
