@@ -115,6 +115,20 @@ describe('getOwnedProject', () => {
     expect(from).not.toHaveBeenCalled();
   });
 
+  it('returns null for a malformed ID before creating a default client', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', '');
+    await expect(getOwnedProject('not-a-uuid')).resolves.toBeNull();
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it('creates the owner client itself when none is passed', async () => {
+    const project = { id: ID, owner_id: 'user_a' };
+    const { client } = fakeClient({ data: project, error: null });
+    createClient.mockReturnValueOnce(client as unknown as ReturnType<typeof createClient>);
+    await expect(getOwnedProject(ID)).resolves.toEqual(project);
+    expect(createClient.mock.calls[0]![1]).toBe(ENV.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+  });
+
   it('throws on a database error', async () => {
     const { client } = fakeClient({ data: null, error: { message: 'boom' } });
     await expect(getOwnedProject(ID, client)).rejects.toThrow(/getOwnedProject failed: boom/);

@@ -31,10 +31,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  */
 export async function getOwnedProject(
   projectId: string,
-  client: OwnerClient = createOwnerClient(),
+  client?: OwnerClient,
 ): Promise<Tables<'projects'> | null> {
   if (!UUID.test(projectId)) return null;
-  const { data, error } = await client
+  const { data, error } = await (client ?? createOwnerClient())
     .from('projects')
     .select('*')
     .eq('id', projectId)
